@@ -3,15 +3,19 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:fl_clash/common/common.dart';
+import 'package:fl_clash/common/dav_client.dart';
 import 'package:fl_clash/core/controller.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/pages/editor.dart';
+import 'package:fl_clash/providers/config.dart';
 import 'package:fl_clash/state.dart';
+import 'package:fl_clash/widgets/webdav_file_picker_dialog.dart';
 import 'package:fl_clash/widgets/widgets.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class EditProfileView extends StatefulWidget {
+class EditProfileView extends ConsumerStatefulWidget {
   final Profile profile;
   final BuildContext context;
 
@@ -22,10 +26,10 @@ class EditProfileView extends StatefulWidget {
   });
 
   @override
-  State<EditProfileView> createState() => _EditProfileViewState();
+  ConsumerState<EditProfileView> createState() => _EditProfileViewState();
 }
 
-class _EditProfileViewState extends State<EditProfileView> {
+class _EditProfileViewState extends ConsumerState<EditProfileView> {
   late TextEditingController labelController;
   late TextEditingController urlController;
   late TextEditingController autoUpdateDurationController;
@@ -34,6 +38,7 @@ class _EditProfileViewState extends State<EditProfileView> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final fileInfoNotifier = ValueNotifier<FileInfo?>(null);
   Uint8List? fileData;
+  String? webdavPath;
 
   Profile get profile => widget.profile;
 
@@ -61,6 +66,7 @@ class _EditProfileViewState extends State<EditProfileView> {
       autoUpdateDuration: Duration(
         minutes: int.parse(autoUpdateDurationController.text),
       ),
+      webdavPath: webdavPath,
     );
     final hasUpdate = widget.profile.url != profile.url;
     if (fileData != null) {
@@ -173,6 +179,31 @@ class _EditProfileViewState extends State<EditProfileView> {
     );
     if (platformFile?.bytes == null) return;
     fileData = platformFile?.bytes;
+    webdavPath = null;
+    fileInfoNotifier.value = fileInfoNotifier.value?.copyWith(
+      size: fileData?.length ?? 0,
+      lastModified: DateTime.now(),
+    );
+  }
+
+  Future<void> _selectFromWebDAV() async {
+    final dav = ref.read(appDAVSettingProvider);
+    if (dav == null) {
+      globalState.showMessage(
+        title: appLocalizations.tip,
+        message: TextSpan(text: appLocalizations.pleaseConfigureWebDAV),
+      );
+      return;
+    }
+    final client = DAVClient(dav);
+    final result = await globalState.showCommonDialog<Map<String, dynamic>>(
+      child: WebDAVFilePickerDialog(client: client),
+    );
+    if (result == null) return;
+    final fileName = result['fileName'] as String;
+    final data = result['data'] as Uint8List;
+    fileData = data;
+    webdavPath = fileName;
     fileInfoNotifier.value = fileInfoNotifier.value?.copyWith(
       size: fileData?.length ?? 0,
       lastModified: DateTime.now(),
@@ -295,6 +326,11 @@ class _EditProfileViewState extends State<EditProfileView> {
                               avatar: const Icon(Icons.upload),
                               label: appLocalizations.upload,
                               onPressed: _uploadProfileFile,
+                            ),
+                            CommonChip(
+                              avatar: const Icon(Icons.cloud),
+                              label: appLocalizations.selectFromWebDAV,
+                              onPressed: _selectFromWebDAV,
                             ),
                           ],
                         ),

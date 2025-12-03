@@ -5,6 +5,7 @@ import 'dart:isolate';
 
 import 'package:archive/archive.dart';
 import 'package:fl_clash/common/archive.dart';
+import 'package:fl_clash/common/dav_client.dart';
 import 'package:fl_clash/core/core.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/plugins/app.dart';
@@ -176,7 +177,17 @@ class AppController {
   }
 
   Future<void> updateProfile(Profile profile) async {
-    final newProfile = await profile.update();
+    Profile newProfile;
+    if (profile.isWebDAVProfile) {
+      final dav = _ref.read(appDAVSettingProvider);
+      if (dav == null) {
+        throw 'WebDAV not configured';
+      }
+      final client = DAVClient(dav);
+      newProfile = await profile.updateFromWebDAV(client);
+    } else {
+      newProfile = await profile.update();
+    }
     _ref
         .read(profilesProvider.notifier)
         .setProfile(newProfile.copyWith(isUpdating: false));
@@ -356,11 +367,15 @@ class AppController {
 
   Future<void> autoUpdateProfiles() async {
     for (final profile in _ref.read(profilesProvider)) {
-      if (!profile.autoUpdate) continue;
+      if (!profile.realAutoUpdate) continue;
       final isNotNeedUpdate = profile.lastUpdateDate
           ?.add(profile.autoUpdateDuration)
           .isBeforeNow;
-      if (isNotNeedUpdate == false || profile.type == ProfileType.file) {
+      if (isNotNeedUpdate == false) {
+        continue;
+      }
+      // Skip file profiles without WebDAV source
+      if (profile.type == ProfileType.file && !profile.isWebDAVProfile) {
         continue;
       }
       try {

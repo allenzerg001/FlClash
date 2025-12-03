@@ -27,6 +27,7 @@ _Profile _$ProfileFromJson(Map<String, dynamic> json) => _Profile(
   label: json['label'] as String?,
   currentGroupName: json['currentGroupName'] as String?,
   url: json['url'] as String? ?? '',
+  webdavPath: json['webdavPath'] as String?,
   lastUpdateDate: json['lastUpdateDate'] == null
       ? null
       : DateTime.parse(json['lastUpdateDate'] as String),
@@ -57,6 +58,7 @@ Map<String, dynamic> _$ProfileToJson(_Profile instance) => <String, dynamic>{
   'label': instance.label,
   'currentGroupName': instance.currentGroupName,
   'url': instance.url,
+  'webdavPath': instance.webdavPath,
   'lastUpdateDate': instance.lastUpdateDate?.toIso8601String(),
   'autoUpdateDuration': instance.autoUpdateDuration.inMicroseconds,
   'subscriptionInfo': instance.subscriptionInfo,
