@@ -3378,56 +3378,6 @@ class AppLocalizations {
       args: [],
     );
   }
-
-  /// `Select from WebDAV`
-  String get selectFromWebDAV {
-    return Intl.message(
-      'Select from WebDAV',
-      name: 'selectFromWebDAV',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `Please configure WebDAV service first`
-  String get pleaseConfigureWebDAV {
-    return Intl.message(
-      'Please configure WebDAV service first',
-      name: 'pleaseConfigureWebDAV',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `WebDAV File Selection`
-  String get webdavFileSelection {
-    return Intl.message(
-      'WebDAV File Selection',
-      name: 'webdavFileSelection',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `No files in WebDAV`
-  String get noFilesInWebDAV {
-    return Intl.message(
-      'No files in WebDAV',
-      name: 'noFilesInWebDAV',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `Loading WebDAV files...`
-  String get loadingWebDAVFiles {
-    return Intl.message(
-      'Loading WebDAV files...',
-      name: 'loadingWebDAVFiles',
-      desc: '',
-      args: [],
-    );
-  }
 }
 
 class AppLocalizationDelegate extends LocalizationsDelegate<AppLocalizations> {

@@ -1,17 +1,10 @@
-import 'dart:typed_data';
-
 import 'package:fl_clash/common/common.dart';
-import 'package:fl_clash/common/dav_client.dart';
-import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/pages/scan.dart';
-import 'package:fl_clash/providers/config.dart';
 import 'package:fl_clash/state.dart';
-import 'package:fl_clash/widgets/webdav_file_picker_dialog.dart';
 import 'package:fl_clash/widgets/widgets.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class AddProfileView extends ConsumerWidget {
+class AddProfileView extends StatelessWidget {
   final BuildContext context;
 
   const AddProfileView({
@@ -66,40 +59,8 @@ class AddProfileView extends ConsumerWidget {
     }
   }
 
-  Future<void> _handleAddProfileFromWebDAV(WidgetRef ref) async {
-    final dav = ref.read(appDAVSettingProvider);
-    if (dav == null) {
-      globalState.showMessage(
-        title: appLocalizations.tip,
-        message: TextSpan(text: appLocalizations.pleaseConfigureWebDAV),
-      );
-      return;
-    }
-    final client = DAVClient(dav);
-    final result = await globalState.showCommonDialog<Map<String, dynamic>>(
-      child: WebDAVFilePickerDialog(client: client),
-    );
-    if (result == null) return;
-    final fileName = result['fileName'] as String;
-    final data = result['data'] as Uint8List;
-    
-    final profile = await globalState.appController.safeRun<Profile?>(
-      () async {
-        await Future.delayed(const Duration(milliseconds: 300));
-        return await Profile.normal(label: fileName).copyWith(
-          webdavPath: fileName,
-        ).saveFile(data);
-      },
-      needLoading: true,
-      title: '${appLocalizations.add}${appLocalizations.profile}',
-    );
-    if (profile != null) {
-      await globalState.appController.addProfile(profile);
-    }
-  }
-
   @override
-  Widget build(context, ref) {
+  Widget build(context) {
     return ListView(
       children: [
         ListItem(
@@ -119,13 +80,7 @@ class AddProfileView extends ConsumerWidget {
           title: Text(appLocalizations.url),
           subtitle: Text(appLocalizations.urlDesc),
           onTap: _toAdd,
-        ),
-        ListItem(
-          leading: const Icon(Icons.cloud),
-          title: Text(appLocalizations.selectFromWebDAV),
-          subtitle: Text('${appLocalizations.selectFromWebDAV} ${appLocalizations.profile}'),
-          onTap: () => _handleAddProfileFromWebDAV(ref),
-        ),
+        )
       ],
     );
   }

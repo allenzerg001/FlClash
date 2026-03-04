@@ -2,7 +2,6 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:fl_clash/common/common.dart';
-import 'package:fl_clash/common/dav_client.dart';
 import 'package:fl_clash/core/controller.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
@@ -50,7 +49,6 @@ abstract class Profile with _$Profile {
     String? label,
     String? currentGroupName,
     @Default('') String url,
-    String? webdavPath,
     DateTime? lastUpdateDate,
     required Duration autoUpdateDuration,
     SubscriptionInfo? subscriptionInfo,
@@ -130,21 +128,10 @@ extension ProfilesExt on List<Profile> {
 }
 
 extension ProfileExtension on Profile {
-  ProfileType get type {
-    if (webdavPath != null && webdavPath!.isNotEmpty) {
-      return ProfileType.file;
-    }
-    return url.isEmpty == true ? ProfileType.file : ProfileType.url;
-  }
+  ProfileType get type =>
+      url.isEmpty == true ? ProfileType.file : ProfileType.url;
 
-  bool get realAutoUpdate {
-    if (webdavPath != null && webdavPath!.isNotEmpty) {
-      return autoUpdate;
-    }
-    return url.isEmpty == true ? false : autoUpdate;
-  }
-
-  bool get isWebDAVProfile => webdavPath != null && webdavPath!.isNotEmpty;
+  bool get realAutoUpdate => url.isEmpty == true ? false : autoUpdate;
 
   Future<void> checkAndUpdate() async {
     final isExists = await check();
@@ -183,14 +170,6 @@ extension ProfileExtension on Profile {
       label: label ?? utils.getFileNameForDisposition(disposition) ?? id,
       subscriptionInfo: SubscriptionInfo.formHString(userinfo),
     ).saveFile(response.data);
-  }
-
-  Future<Profile> updateFromWebDAV(DAVClient client) async {
-    if (webdavPath == null || webdavPath!.isEmpty) {
-      throw 'WebDAV path is not set';
-    }
-    final data = await client.readFile(webdavPath!);
-    return await saveFile(Uint8List.fromList(data));
   }
 
   Future<Profile> saveFile(Uint8List bytes) async {
